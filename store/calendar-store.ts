@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appointment, BlockedTime } from '@/types';
-import { mockAppointments } from '@/mocks/appointments';
+import { api } from '@/utils/api';
 import { useAuthStore } from './auth-store';
 
 interface CalendarState {
@@ -17,6 +17,7 @@ interface CalendarState {
   updateAppointment: (id: string, data: Partial<Appointment>) => void;
   cancelAppointment: (id: string) => void;
   deleteAppointment: (id: string) => void;
+  hydrateFromApi: (userId?: string) => Promise<void>;
   
   // Availability
   getBlockedTimes: () => BlockedTime[];
@@ -34,7 +35,7 @@ interface CalendarState {
 export const useCalendarStore = create<CalendarState>()(
   persist(
     (set, get) => ({
-      appointments: mockAppointments,
+      appointments: [],
       blockedTimes: [],
       
       // Appointment actions
@@ -95,6 +96,15 @@ export const useCalendarStore = create<CalendarState>()(
         set(state => ({
           appointments: state.appointments.filter(appointment => appointment.id !== id)
         }));
+      },
+
+      hydrateFromApi: async (userId) => {
+        try {
+          const data = userId ? await api.get(`/calendar/appointments/user/${userId}`) : await api.get('/calendar/appointments');
+          set({ appointments: data });
+        } catch (e) {
+          console.warn('Failed to hydrate appointments', e);
+        }
       },
       
       // Availability

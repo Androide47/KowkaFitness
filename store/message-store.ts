@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Message, Attachment } from '@/types';
-import { mockMessages } from '@/mocks/messages';
+import { api } from '@/utils/api';
 import { useAuthStore } from './auth-store';
 
 interface MessageState {
@@ -25,10 +25,23 @@ interface MessageState {
 export const useMessageStore = create<MessageState>()(
   persist(
     (set, get) => ({
-      messages: mockMessages,
+      messages: [],
       
       // Message actions
       getMessages: () => get().messages,
+      hydrateFromApi: async (userId?: string, otherUserId?: string) => {
+        try {
+          if (userId && otherUserId) {
+            const data = await api.get(`/messages/conversation?userId=${encodeURIComponent(userId)}&otherUserId=${encodeURIComponent(otherUserId)}`);
+            set({ messages: data });
+          } else {
+            const data = await api.get('/messages');
+            set({ messages: data });
+          }
+        } catch (e) {
+          console.warn('Failed to hydrate messages', e);
+        }
+      },
       
       getConversation: (userId, otherUserId) => {
         return get().messages.filter(

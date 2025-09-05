@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Client, Trainer, User } from '@/types';
-import { mockTrainer, mockClients } from '@/mocks/users';
+import { api, setAuthToken } from '@/utils/api';
 
 interface AuthState {
   user: User | null;
@@ -25,36 +25,44 @@ export const useAuthStore = create<AuthState>()(
       clients: [],
       
       login: async (email: string, password: string) => {
-        // In a real app, this would be an API call
-        // For demo purposes, we're using mock data
-        
-        // Simulate trainer login
-        if (email.includes('trainer') || email.includes('coach')) {
-          set({
-            user: mockTrainer,
-            isAuthenticated: true,
-            isTrainer: true,
-            clients: mockClients,
+        try {
+          const form = new URLSearchParams();
+          form.append('username', email);
+          form.append('password', password);
+          form.append('grant_type', 'password');
+          const res = await fetch(`/auth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: form.toString(),
           });
-          return true;
-        }
-        
-        // Simulate client login
-        const client = mockClients.find(c => c.email === email);
-        if (client) {
+          if (!res.ok) return false;
+          const { access_token } = await res.json();
+          setAuthToken(access_token);
+          // fetch profile
+          const me = await api.get('/users/me');
+          const user: User = {
+            id: String(me.id),
+            name: `${me.first_name} ${me.last_name}`.trim() || me.username,
+            email: me.email,
+            avatar: me.profile_picture || undefined,
+            role: me.role === 'trainer' ? 'trainer' : 'client',
+            joinedAt: new Date().toISOString(),
+          } as User;
           set({
-            user: client,
+            user,
             isAuthenticated: true,
-            isTrainer: false,
+            isTrainer: user.role === 'trainer',
             clients: [],
           });
           return true;
+        } catch (e) {
+          console.error('Login error', e);
+          return false;
         }
-        
-        return false;
       },
       
       logout: () => {
+        setAuthToken(null);
         set({
           user: null,
           isAuthenticated: false,

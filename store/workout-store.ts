@@ -2,8 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Exercise, Workout, WorkoutExercise } from '@/types';
-import { mockExercises } from '@/mocks/exercises';
-import { mockWorkouts } from '@/mocks/workouts';
+import { api } from '@/utils/api';
 
 interface CompletedExercise {
   workoutId: string;
@@ -37,6 +36,7 @@ interface WorkoutState {
   addWorkout: (workout: Workout) => void;
   updateWorkout: (id: string, data: Partial<Workout>) => void;
   deleteWorkout: (id: string) => void;
+  hydrateFromApi: () => Promise<void>;
   
   // Active workout session actions
   startWorkout: (workoutId: string) => void;
@@ -59,8 +59,8 @@ interface WorkoutState {
 export const useWorkoutStore = create<WorkoutState>()(
   persist(
     (set, get) => ({
-      exercises: mockExercises,
-      workouts: mockWorkouts,
+      exercises: [],
+      workouts: [],
       activeWorkout: null,
       activeExerciseIndex: 0,
       isWorkoutActive: false,
@@ -90,6 +90,16 @@ export const useWorkoutStore = create<WorkoutState>()(
       
       // Workout actions
       getWorkouts: () => get().workouts,
+
+      // Hydration from backend
+      hydrateFromApi: async () => {
+        try {
+          const workouts = await api.get('/workouts');
+          set({ workouts });
+        } catch (e) {
+          console.warn('Failed to hydrate workouts', e);
+        }
+      },
       
       getWorkoutById: (id) => {
         return get().workouts.find(workout => workout.id === id);

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ProgressEntry, Measurements } from '@/types';
-import { mockProgressEntries } from '@/mocks/progress';
+import { api } from '@/utils/api';
 import { useAuthStore } from './auth-store';
 
 interface ProgressState {
@@ -31,7 +31,15 @@ interface ProgressState {
 export const useProgressStore = create<ProgressState>()(
   persist(
     (set, get) => ({
-      entries: mockProgressEntries,
+      entries: [],
+      hydrateFromApi: async (clientId: string) => {
+        try {
+          const data = await api.get(`/progress/${clientId}`);
+          set({ entries: data });
+        } catch (e) {
+          console.warn('Failed to hydrate progress', e);
+        }
+      },
       
       // Progress entry actions
       getEntries: (clientId) => {

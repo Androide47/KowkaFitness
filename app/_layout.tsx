@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '@/store/auth-store';
 import { colors } from '@/constants/colors';
+import { useWorkoutStore } from '@/store/workout-store';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -17,6 +18,7 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const { isAuthenticated } = useAuthStore();
+  const hydrateWorkouts = useWorkoutStore(s => s.hydrateFromApi);
   
   useEffect(() => {
     if (error) throw error;
@@ -40,6 +42,12 @@ export default function RootLayout() {
       router.replace('/');
     }
   }, [isAuthenticated, segments]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      hydrateWorkouts();
+    }
+  }, [isAuthenticated]);
   
   if (!loaded) {
     return null;

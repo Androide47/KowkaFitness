@@ -87,9 +87,7 @@ export default function LoginScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Image 
-            source={{ 
-              uri: 'https://images.unsplash.com/photo-1594882645126-14020914d58d?q=80&w=1920&auto=format&fit=crop' 
-            }} 
+            source={require('@/assets/images/IsoWhite.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
