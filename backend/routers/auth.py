@@ -15,8 +15,8 @@ router = APIRouter(
     tags=["auth"],
 )
 
-SECRET_KEY = "YourSecretKey"
-ALGORITHM = "YourAlgorithm" #Example HS256
+SECRET_KEY = "WJyKLk3FK6BcKu2k32sVbM6QNjCioN7oXR3pgiqyTFo="
+ALGORITHM = "HS256" #Example HS256
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

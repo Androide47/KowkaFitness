@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Client, Trainer, User } from '@/types';
 import { api, setAuthToken } from '@/utils/api';
+import { API_BASE_URL } from '@/constants/config';
 
 interface AuthState {
   user: User | null;
@@ -30,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
           form.append('username', email);
           form.append('password', password);
           form.append('grant_type', 'password');
-          const res = await fetch(`/auth/token`, {
+          const res = await fetch(`${API_BASE_URL}/auth/token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: form.toString(),
